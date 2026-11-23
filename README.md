@@ -1,20 +1,21 @@
 # REST API Automation Testing with Playwright
+# By Alfa Nashiha
 
 [![Playwright API Tests](https://github.com/AlfaNashiha26/test-api-automation/actions/workflows/playwright.yml/badge.svg)](https://github.com/AlfaNashiha26/test-api-automation/actions/workflows/playwright.yml)
 
-Repository ini berisi kumpulan skenario pengujian otomatis (**REST API Automation Testing**) menggunakan **Playwright (`APIRequestContext`)** dan **JavaScript**. Pengujian difokuskan pada verifikasi fungsionalitas CRUD (*Create, Read, Update, Delete*), manajemen autentikasi berbasis *Cookie Token*, serta validasi struktur kontrak JSON pada layanan API publik [Restful-Booker](https://restful-booker.herokuapp.com/).
+Repository ini berisi kumpulan skenario pengujian otomatis (**REST API Automation Testing**) menggunakan **Playwright (`APIRequestContext`)** dan **JavaScript**. Pengujian mencakup verifikasi fungsionalitas CRUD (*Create, Read, Update, Delete*), autentikasi *Cookie Token*, **JSON Schema Validation (Ajv)**, serta **API Negative Testing** pada layanan API publik [Restful-Booker](https://restful-booker.herokuapp.com/).
 
-Seluruh rangkaian pengujian terintegrasi secara otomatis dengan **GitHub Actions** sehingga dieksekusi setiap kali terjadi pembaruan kode (`push` atau `pull_request`) ke branch `main`.
+Seluruh pengujian terintegrasi dengan **GitHub Actions** yang berjalan otomatis pada setiap `push`/`pull_request`, terjadwal setiap hari (*Cron Job*), serta dapat dipicu secara manual (*Workflow Dispatch*).
 
 ---
 
 ## Teknologi & Tools
 
 * **Runtime Environment:** Node.js (v26+)
-* **Automation Framework:** Playwright Test (`@playwright/test` — menggunakan HTTP client bawaan `request` tanpa overhead browser)
+* **Automation Framework:** Playwright Test (`@playwright/test` — HTTP client bawaan `request` tanpa overhead browser)
+* **Schema Validator:** Ajv (`ajv` — *Another JSON Validator*)
 * **Target API:** [Restful-Booker API](https://restful-booker.herokuapp.com/) (`https://restful-booker.herokuapp.com`)
-* **CI/CD Pipeline:** GitHub Actions (Ubuntu Linux Runner)
-* **Reporting:** Playwright HTML Reporter & List Reporter
+* **CI/CD Pipeline:** GitHub Actions (Cron Schedule, Manual Trigger, & Job Summary)
 
 ---
 
@@ -23,14 +24,17 @@ Seluruh rangkaian pengujian terintegrasi secara otomatis dengan **GitHub Actions
 ```text
 ├── .github/
 │   └── workflows/
-│       └── playwright.yml      # Konfigurasi pipeline CI/CD GitHub Actions
+│       └── playwright.yml                  # Konfigurasi CI/CD, Cron Job, & Step Summary
+├── schemas/
+│   └── booking-schema.json                 # Kontrak JSON Schema untuk validasi response API
 ├── tests/
-│   └── booking.spec.js         # Suite pengujian API (GET, POST, Auth Token, PUT, DELETE)
-├── .gitignore                  # Pengecualian file lokal (node_modules, report, cache)
-├── package.json                # Metadata dan daftar dependensi Node.js
-├── package-lock.json           # Lockfile versi dependensi yang konsisten
-├── playwright.config.js        # Konfigurasi baseURL, testDir, dan reporter Playwright
-└── README.md                   # Dokumentasi teknis project
+│   ├── booking-negative-schema.spec.js     # Skenario JSON Schema Validation & API Negative Testing
+│   └── booking.spec.js                     # Skenario Happy Path CRUD & Auth Token API
+├── .gitignore                              # Pengecualian file lokal (node_modules, report, cache)
+├── package.json                            # Metadata dan daftar dependensi Node.js
+├── package-lock.json                       # Lockfile versi dependensi yang konsisten
+├── playwright.config.js                    # Konfigurasi baseURL, testDir, dan reporter Playwright
+└── README.md                               # Dokumentasi teknis project
 
 
 ## Matriks & Detail Test Cases (`tests/booking.spec.js`)
