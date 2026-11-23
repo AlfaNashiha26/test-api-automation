@@ -1,22 +1,44 @@
 name: Playwright API Tests
+
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  # 1. Penjadwalan Otomatis (Cron Job): Jalan setiap hari pukul 08:00 WIB (01:00 UTC)
+  schedule:
+    - cron: '0 1 * * *'
+  # 2. Manual Trigger: Memunculkan tombol "Run workflow" di tab GitHub Actions
+  workflow_dispatch:
+
 jobs:
   test:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
+
     - name: Install dependencies
       run: npm ci
+
     - name: Run Playwright API tests
+      id: run_tests
       run: npx playwright test
+
+    # 3. Ringkasan Otomatis di Halaman GitHub Actions Summary
+    - name: Generate Test Summary Report
+      if: always()
+      run: |
+        echo "## 📊 Ringkasan Eksekusi API Automation" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status Eksekusi:** ${{ steps.run_tests.outcome }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Waktu (UTC):** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
