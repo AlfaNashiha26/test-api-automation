@@ -16,32 +16,53 @@ jobs:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - uses: actions/setup-node@v4
-      with:
-        node-version: lts/*
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Run Playwright API tests
-      id: run_tests
-      run: npx playwright test
+      - name: Run Playwright API tests
+        id: run_tests
+        run: npx playwright test
 
-    # 3. Ringkasan Otomatis di Halaman GitHub Actions Summary
-    - name: Generate Test Summary Report
-      if: always()
-      run: |
-        echo "## 📊 Ringkasan Eksekusi API Automation" >> $GITHUB_STEP_SUMMARY
-        echo "- **Status Eksekusi:** ${{ steps.run_tests.outcome }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Waktu (UTC):** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+      # 3. Ringkasan Otomatis di Halaman GitHub Actions Summary
+      - name: Generate Test Summary Report
+        if: always()
+        run: |
+          echo "## 📊 Ringkasan Eksekusi API Automation" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status Eksekusi:** ${{ steps.run_tests.outcome }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Waktu (UTC):** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
 
-    - uses: actions/upload-artifact@v4
-      if: ${{ !cancelled() }}
-      with:
-        name: playwright-api-report
-        path: playwright-report/
-        retention-days: 30
+      # 4. Kirim Notifikasi Otomatis ke Telegram
+      - name: Send Telegram Notification
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          STATUS="${{ steps.run_tests.outcome }}"
+          if [ "$STATUS" = "success" ]; then
+            ICON="✅ PASSED"
+          else
+            ICON="❌ FAILED"
+          fi
+
+          MESSAGE="🤖 *Playwright Automation Report*%0A%0A*Repo:* ${{ github.repository }}%0A*Status:* ${ICON}%0A*Trigger:* ${{ github.event_name }}%0A*Branch:* ${{ github.ref_name }}%0A*Detail:* https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="${MESSAGE}" \
+            -d parse_mode="Markdown"
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-api-report
+          path: playwright-report/
+          retention-days: 30
